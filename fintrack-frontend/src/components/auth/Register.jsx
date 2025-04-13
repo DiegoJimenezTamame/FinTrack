@@ -4,7 +4,8 @@ import {
   Paper, Alert
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
-import { AuthContext } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
+
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -16,7 +17,7 @@ function Register() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { register } = useContext(AuthContext);
+  const { register } = useContext(useAuth);
   const navigate = useNavigate();
 
   const handleChange = (e) => {

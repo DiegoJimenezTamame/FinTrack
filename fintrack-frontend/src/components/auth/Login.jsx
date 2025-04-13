@@ -4,10 +4,10 @@ import {
   Paper, Alert
 } from '@mui/material';
 
-import { loginUser } from '../Api'; // Adjust path if needed
+import { loginUser } from '../../services/Api'; // Ensure the path is correct
 
 import { Link, useNavigate } from 'react-router-dom';
-import { AuthContext } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext'; // Correct import
 
 function Login() {
   const [username, setUsername] = useState('');
@@ -15,7 +15,7 @@ function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { login } = useContext(AuthContext);
+  const { login } = useContext(useAuth); // Access the login function from context
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -24,11 +24,11 @@ function Login() {
     setLoading(true);
 
     try {
-      const data = await loginUser({ username, password });
+      const data = await loginUser({ username, password }); // Send data to backend
 
       // Assuming your backend returns { token, user }
-      login(data.user, data.token);
-      navigate('/');
+      login(data.user, data.token); // Store user and token in context
+      navigate('/'); // Redirect to homepage
     } catch (err) {
       console.error('Login error:', err);
       setError(err?.response?.data?.message || 'Failed to sign in. Check your credentials.');

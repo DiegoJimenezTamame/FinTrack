@@ -1,7 +1,7 @@
 // Dashboard.jsx
 import React, { useState, useEffect } from 'react';
-import { useAuth } from './AuthContext';
-import { fetchDashboardData } from './Api';
+import { useAuth } from '../../contexts/AuthContext';
+import { fetchDashboardData } from '../../services/Api';
 import { Link } from 'react-router-dom';
 
 const Dashboard = () => {

@@ -1,6 +1,6 @@
 // BudgetList.jsx
 import React, { useState, useEffect } from 'react';
-import { fetchBudgets, deleteBudget } from './Api';
+import { fetchBudgets, deleteBudget } from '../../services/Api';
 import { Link } from 'react-router-dom';
 
 const BudgetList = () => {

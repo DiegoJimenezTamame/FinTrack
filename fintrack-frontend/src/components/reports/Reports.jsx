@@ -1,6 +1,6 @@
 // Reports.jsx
 import React, { useState, useEffect } from 'react';
-import { fetchTransactions } from './Api';
+import { fetchTransactions } from '../../services/Api';
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell
@@ -187,3 +187,14 @@ const Reports = () => {
         </div>
       );
     }
+  };
+
+  return (
+    <div className="reports-container">
+      {isLoading ? <p>Loading...</p> : renderChart()}
+      {error && <p className="error">{error}</p>}
+    </div>
+  );
+};
+
+export default Reports;

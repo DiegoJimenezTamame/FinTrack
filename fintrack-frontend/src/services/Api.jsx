@@ -1,4 +1,3 @@
-// Api.jsx
 import axios from 'axios';
 
 // Set base URL for all API requests
@@ -34,6 +33,12 @@ export const loginUser = async (credentials) => {
 
 export const getCurrentUser = async () => {
   const response = await apiClient.get('/auth/me');
+  return response.data;
+};
+
+// Profile update API call
+export const updateUserProfile = async (userData) => {
+  const response = await apiClient.put('/auth/update', userData); // Assuming the endpoint is `/auth/update`
   return response.data;
 };
 
@@ -92,6 +97,12 @@ export const updateBudget = async (id, budgetData) => {
 
 export const deleteBudget = async (id) => {
   const response = await apiClient.delete(`/budgets/${id}`);
+  return response.data;
+};
+
+// Add the changePassword API call
+export const changePassword = async (passwordData) => {
+  const response = await apiClient.put('/auth/change-password', passwordData);
   return response.data;
 };
 

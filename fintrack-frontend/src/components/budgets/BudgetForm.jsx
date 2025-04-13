@@ -1,7 +1,7 @@
 // BudgetForm.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchBudget, createBudget, updateBudget } from './Api';
+import { fetchBudget, createBudget, updateBudget } from '../../services/Api';
 
 const BudgetForm = () => {
   const { id } = useParams();

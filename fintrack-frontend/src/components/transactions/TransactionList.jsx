@@ -1,6 +1,6 @@
 // TransactionList.jsx
 import React, { useState, useEffect } from 'react';
-import { fetchTransactions, deleteTransaction } from './Api';
+import { fetchTransactions, deleteTransaction } from '../../services/Api';
 import { Link } from 'react-router-dom';
 
 const TransactionList = () => {

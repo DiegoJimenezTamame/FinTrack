@@ -1,6 +1,6 @@
-// AuthContext.jsx (Updated)
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { getCurrentUser } from './Api';
+import { getCurrentUser } from '../services/Api';  // Adjust the path accordingly
+
 
 const AuthContext = createContext();
 

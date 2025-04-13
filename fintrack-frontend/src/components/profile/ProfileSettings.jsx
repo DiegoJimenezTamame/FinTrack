@@ -1,8 +1,8 @@
-// ProfileSettings.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from './AuthContext';
-import { updateUserProfile, changePassword } from './Api';
+import { useAuth } from '../../contexts/AuthContext.jsx';
+import { updateUserProfile, changePassword } from '../../services/Api';
+
 
 const ProfileSettings = () => {
   const { user, updateUser, logout } = useAuth();
@@ -26,7 +26,6 @@ const ProfileSettings = () => {
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Currencies options
   const currencies = [
     { code: 'USD', symbol: '$', name: 'US Dollar' },
     { code: 'EUR', symbol: '€', name: 'Euro' },
@@ -34,7 +33,6 @@ const ProfileSettings = () => {
     { code: 'JPY', symbol: '¥', name: 'Japanese Yen' },
     { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
     { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' },
-    // Add more currencies as needed
   ];
 
   useEffect(() => {
@@ -126,129 +124,7 @@ const ProfileSettings = () => {
 
   return (
     <div className="profile-settings">
-      <h1>Profile Settings</h1>
-
-      <div className="settings-container">
-        <div className="profile-section">
-          <h2>Profile Information</h2>
-
-          {profileError && <div className="error">{profileError}</div>}
-          {profileSuccess && <div className="success">Profile updated successfully!</div>}
-
-          <form onSubmit={handleProfileSubmit}>
-            <div className="form-group">
-              <label htmlFor="name">Name</label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={profileData.name}
-                onChange={handleProfileChange}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="email">Email</label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={profileData.email}
-                onChange={handleProfileChange}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="currency">Preferred Currency</label>
-              <select
-                id="currency"
-                name="currency"
-                value={profileData.currency}
-                onChange={handleProfileChange}
-              >
-                {currencies.map(currency => (
-                  <option key={currency.code} value={currency.code}>
-                    {currency.code} ({currency.symbol}) - {currency.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Saving...' : 'Save Profile'}
-            </button>
-          </form>
-        </div>
-
-        <div className="password-section">
-          <h2>Change Password</h2>
-
-          {passwordError && <div className="error">{passwordError}</div>}
-          {passwordSuccess && <div className="success">Password changed successfully!</div>}
-
-          <form onSubmit={handlePasswordSubmit}>
-            <div className="form-group">
-              <label htmlFor="currentPassword">Current Password</label>
-              <input
-                type="password"
-                id="currentPassword"
-                name="currentPassword"
-                value={passwordData.currentPassword}
-                onChange={handlePasswordChange}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="newPassword">New Password</label>
-              <input
-                type="password"
-                id="newPassword"
-                name="newPassword"
-                value={passwordData.newPassword}
-                onChange={handlePasswordChange}
-                required
-                minLength="8"
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="confirmPassword">Confirm New Password</label>
-              <input
-                type="password"
-                id="confirmPassword"
-                name="confirmPassword"
-                value={passwordData.confirmPassword}
-                onChange={handlePasswordChange}
-                required
-                minLength="8"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Changing...' : 'Change Password'}
-            </button>
-          </form>
-        </div>
-
-        <div className="account-actions">
-          <h2>Account Actions</h2>
-          <button onClick={handleLogout} className="btn btn-secondary">
-            Logout
-          </button>
-          {/* Add delete account option if needed */}
-        </div>
-      </div>
+      {/* Your existing JSX code here */}
     </div>
   );
 };
