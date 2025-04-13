@@ -1,8 +1,8 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { getCurrentUser } from '../services/Api';  // Adjust the path accordingly
 
-
-const AuthContext = createContext();
+// Create and export the context directly
+export const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser }}>
-      {children}
+      {!loading && children}
     </AuthContext.Provider>
   );
 };

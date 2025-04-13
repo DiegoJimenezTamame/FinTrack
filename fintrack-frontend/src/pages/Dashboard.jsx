@@ -1,102 +1,89 @@
-            <Card sx={{ p: 2 }}>
-              <CardContent>
-                <Typography variant="h6" align="center">Total Balance</Typography>
-                <Typography variant="h5" align="center">
-                  {formatCurrency(totalBalance)}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
+// src/pages/Dashboard.js
+import React, { useState, useEffect } from 'react';
+import { getTransactionStats } from '../services/transactionService';
+import Chart from '../components/Chart/Chart';
+import TransactionList from '../components/Transaction/TransactionList';
+import TransactionForm from '../components/Transaction/TransactionForm';
+import './Dashboard.css';
 
-          {/* Recent Transactions */}
-          <Grid item xs={12} md={8}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" sx={{ mb: 2 }}>
-                  Recent Transactions
-                </Typography>
-                <List>
-                  {recentTransactions.map((transaction) => (
-                    <ListItem key={transaction.id} divider>
-                      <ListItemText
-                        primary={`${transaction.type === 'INCOME' ? 'Income' : 'Expense'}: ${formatCurrency(transaction.amount)}`}
-                        secondary={format(new Date(transaction.date), 'MMM dd, yyyy')}
-                      />
-                      <IconButton onClick={() => handleEditTransaction(transaction)}><Edit /></IconButton>
-                      <IconButton onClick={() => handleDeleteTransaction(transaction.id)}><Delete /></IconButton>
-                    </ListItem>
-                  ))}
-                </List>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      </Paper>
+function Dashboard() {
+  const [stats, setStats] = useState({
+    balance: 0,
+    income: 0,
+    expense: 0
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showForm, setShowForm] = useState(false);
 
-      {/* Charts Section */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 2 }}>
-                Spending by Category
-              </Typography>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={categoryChartData}
-                    dataKey="value"
-                    nameKey="name"
-                    outerRadius={120}
-                    fill="#8884d8"
-                    label
-                  >
-                    {categoryChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </Grid>
+  useEffect(() => {
+    fetchStats();
+  }, []);
 
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 2 }}>
-                Monthly Income & Expense
-              </Typography>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={monthlyChartData}>
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="income" fill="#0088FE" />
-                  <Bar dataKey="expense" fill="#FF8042" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+  const fetchStats = async () => {
+    try {
+      setIsLoading(true);
+      const data = await getTransactionStats();
+      setStats(data);
+    } catch (err) {
+      console.error("Error fetching statistics:", err);
+      setError("Failed to load financial statistics. Please try again later.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      {/* Transaction Form Dialog */}
-      <Dialog open={isDialogOpen} onClose={() => setIsDialogOpen(false)}>
-        <DialogTitle>{selectedTransaction ? 'Edit Transaction' : 'Add Transaction'}</DialogTitle>
-        <DialogContent>
-          <TransactionForm
-            transaction={selectedTransaction}
-            onSuccess={handleTransactionSuccess}
-            onClose={() => setIsDialogOpen(false)}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setIsDialogOpen(false)} color="secondary">Cancel</Button>
-        </DialogActions>
-      </Dialog>
-    </Container>
+  const handleTransactionAdded = () => {
+    fetchStats();
+    setShowForm(false);
+  };
+
+  return (
+    <div className="dashboard">
+      <div className="dashboard-header">
+        <h1>Financial Dashboard</h1>
+        <button 
+          className="add-transaction-btn"
+          onClick={() => setShowForm(!showForm)}
+        >
+          {showForm ? 'Cancel' : 'Add Transaction'}
+        </button>
+      </div>
+
+      {error && <div className="error-message">{error}</div>}
+
+      {showForm && (
+        <div className="add-transaction-form">
+          <h2>Add New Transaction</h2>
+          <TransactionForm onSubmit={handleTransactionAdded} onCancel={() => setShowForm(false)} />
+        </div>
+      )}
+
+      <div className="stats-summary">
+        <div className="stat-card balance">
+          <h3>Balance</h3>
+          <p className="stat-amount">${isLoading ? '...' : stats.balance.toFixed(2)}</p>
+        </div>
+        <div className="stat-card income">
+          <h3>Income</h3>
+          <p className="stat-amount">${isLoading ? '...' : stats.income.toFixed(2)}</p>
+        </div>
+        <div className="stat-card expense">
+          <h3>Expenses</h3>
+          <p className="stat-amount">${isLoading ? '...' : stats.expense.toFixed(2)}</p>
+        </div>
+      </div>
+
+      <div className="dashboard-main">
+        <div className="chart-section">
+          <Chart />
+        </div>
+        
+        <div className="transactions-section">
+          <TransactionList />
+        </div>
+      </div>
+    </div>
   );
 }
 

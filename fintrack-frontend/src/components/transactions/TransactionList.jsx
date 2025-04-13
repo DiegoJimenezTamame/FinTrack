@@ -1,32 +1,27 @@
-// TransactionList.jsx
+// src/components/Transaction/TransactionList.js
 import React, { useState, useEffect } from 'react';
-import { fetchTransactions, deleteTransaction } from '../../services/Api';
-import { Link } from 'react-router-dom';
+import { getTransactions, deleteTransaction } from '../../services/TransactionService';
+import TransactionForm from './TransactionForm';
+import './TransactionList.css';
 
-const TransactionList = () => {
+function TransactionList() {
   const [transactions, setTransactions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filter, setFilter] = useState({
-    type: 'all',
-    startDate: '',
-    endDate: '',
-    category: ''
-  });
+  const [editingTransaction, setEditingTransaction] = useState(null);
 
   useEffect(() => {
-    loadTransactions();
+    fetchTransactions();
   }, []);
 
-  const loadTransactions = async () => {
+  const fetchTransactions = async () => {
     try {
       setIsLoading(true);
-      const data = await fetchTransactions(filter);
+      const data = await getTransactions();
       setTransactions(data);
-      setError(null);
     } catch (err) {
-      setError('Failed to load transactions');
-      console.error(err);
+      console.error("Error fetching transactions:", err);
+      setError("Failed to load transactions. Please try again later.");
     } finally {
       setIsLoading(false);
     }
@@ -36,130 +31,88 @@ const TransactionList = () => {
     if (window.confirm('Are you sure you want to delete this transaction?')) {
       try {
         await deleteTransaction(id);
-        setTransactions(transactions.filter(t => t._id !== id));
+        setTransactions(transactions.filter(transaction => transaction.id !== id));
       } catch (err) {
-        setError('Failed to delete transaction');
-        console.error(err);
+        console.error("Error deleting transaction:", err);
+        setError("Failed to delete transaction. Please try again later.");
       }
     }
   };
 
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilter({
-      ...filter,
-      [name]: value
-    });
+  const handleEdit = (transaction) => {
+    setEditingTransaction(transaction);
   };
 
-  const applyFilters = (e) => {
-    e.preventDefault();
-    loadTransactions();
+  const handleFormSubmit = () => {
+    setEditingTransaction(null);
+    fetchTransactions();
   };
 
-  if (isLoading) return <div className="loading">Loading transactions...</div>;
-  if (error) return <div className="error">{error}</div>;
+  if (isLoading) {
+    return <div className="loading">Loading transactions...</div>;
+  }
+
+  if (error) {
+    return <div className="error">{error}</div>;
+  }
 
   return (
-    <div className="transaction-list">
-      <h1>Transactions</h1>
-
-      <div className="filters">
-        <form onSubmit={applyFilters}>
-          <div className="filter-group">
-            <label>
-              Type:
-              <select
-                name="type"
-                value={filter.type}
-                onChange={handleFilterChange}
-              >
-                <option value="all">All</option>
-                <option value="income">Income</option>
-                <option value="expense">Expense</option>
-              </select>
-            </label>
-
-            <label>
-              From:
-              <input
-                type="date"
-                name="startDate"
-                value={filter.startDate}
-                onChange={handleFilterChange}
-              />
-            </label>
-
-            <label>
-              To:
-              <input
-                type="date"
-                name="endDate"
-                value={filter.endDate}
-                onChange={handleFilterChange}
-              />
-            </label>
-
-            <label>
-              Category:
-              <input
-                type="text"
-                name="category"
-                value={filter.category}
-                onChange={handleFilterChange}
-                placeholder="Category"
-              />
-            </label>
-
-            <button type="submit">Apply Filters</button>
-          </div>
-        </form>
-      </div>
-
-      <Link to="/transactions/add" className="btn btn-primary add-transaction">
-        Add New Transaction
-      </Link>
-
-      {transactions.length === 0 ? (
-        <p>No transactions found.</p>
+    <div className="transaction-list-container">
+      {editingTransaction ? (
+        <div className="edit-form">
+          <h3>Edit Transaction</h3>
+          <TransactionForm
+            transaction={editingTransaction}
+            onSubmit={handleFormSubmit}
+            onCancel={() => setEditingTransaction(null)}
+          />
+        </div>
       ) : (
-        <table className="transactions-table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Description</th>
-              <th>Category</th>
-              <th>Amount</th>
-              <th>Type</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {transactions.map(transaction => (
-              <tr key={transaction._id} className={transaction.type}>
-                <td>{new Date(transaction.date).toLocaleDateString()}</td>
-                <td>{transaction.description}</td>
-                <td>{transaction.category}</td>
-                <td className="amount">${transaction.amount.toFixed(2)}</td>
-                <td>{transaction.type}</td>
-                <td className="actions">
-                  <Link to={`/transactions/edit/${transaction._id}`} className="btn-edit">
-                    Edit
-                  </Link>
-                  <button
-                    onClick={() => handleDelete(transaction._id)}
-                    className="btn-delete"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <>
+          <h3>Recent Transactions</h3>
+          {transactions.length === 0 ? (
+            <p>No transactions found. Add one to get started!</p>
+          ) : (
+            <div className="transaction-list">
+              {transactions.map(transaction => (
+                <div key={transaction.id} className={`transaction-item ${transaction.type}`}>
+                  <div className="transaction-info">
+                    <div className="transaction-primary">
+                      <span className="transaction-category">{transaction.category}</span>
+                      <span className="transaction-amount">
+                        {transaction.type === 'income' ? '+' : '-'}
+                        ${Math.abs(transaction.amount).toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="transaction-secondary">
+                      <span className="transaction-date">
+                        {new Date(transaction.date).toLocaleDateString()}
+                      </span>
+                      <span className="transaction-description">{transaction.description}</span>
+                    </div>
+                  </div>
+                  <div className="transaction-actions">
+                    <button
+                      className="edit-btn"
+                      onClick={() => handleEdit(transaction)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="delete-btn"
+                      onClick={() => handleDelete(transaction.id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
-};
+}
 
 export default TransactionList;

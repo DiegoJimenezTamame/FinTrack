@@ -1,200 +1,129 @@
-// TransactionForm.jsx
+// src/components/Transaction/TransactionForm.js
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { fetchTransaction, createTransaction, updateTransaction } from '../../services/Api';
+import { createTransaction, updateTransaction } from '../../services/TransactionService';
+import './TransactionForm.css';
 
-const TransactionForm = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const isEditMode = Boolean(id);
-
+function TransactionForm({ transaction, onSubmit, onCancel }) {
   const [formData, setFormData] = useState({
     type: 'expense',
-    amount: '',
-    description: '',
     category: '',
-    date: new Date().toISOString().split('T')[0]
+    amount: '',
+    date: new Date().toISOString().split('T')[0],
+    description: ''
   });
-
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Common expense categories
-  const expenseCategories = [
-    'Food & Dining', 'Transportation', 'Housing', 'Utilities',
-    'Entertainment', 'Shopping', 'Health & Fitness', 'Education',
-    'Personal Care', 'Travel', 'Gifts & Donations', 'Other'
-  ];
-
-  // Common income categories
-  const incomeCategories = [
-    'Salary', 'Freelance', 'Investments', 'Gifts', 'Refunds',
-    'Rental Income', 'Side Business', 'Other'
-  ];
-
   useEffect(() => {
-    if (isEditMode) {
-      const loadTransaction = async () => {
-        try {
-          setIsLoading(true);
-          const transaction = await fetchTransaction(id);
-          setFormData({
-            type: transaction.type,
-            amount: transaction.amount,
-            description: transaction.description,
-            category: transaction.category,
-            date: new Date(transaction.date).toISOString().split('T')[0]
-          });
-        } catch (err) {
-          setError('Failed to load transaction data');
-          console.error(err);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-
-      loadTransaction();
+    if (transaction) {
+      setFormData({
+        id: transaction.id,
+        type: transaction.type,
+        category: transaction.category,
+        amount: Math.abs(transaction.amount),
+        date: new Date(transaction.date).toISOString().split('T')[0],
+        description: transaction.description || ''
+      });
     }
-  }, [id, isEditMode]);
+  }, [transaction]);
+
+  const categories = {
+    income: ['Salary', 'Freelance', 'Investments', 'Gifts', 'Other'],
+    expense: ['Food', 'Housing', 'Transportation', 'Entertainment', 'Utilities', 'Healthcare', 'Education', 'Shopping', 'Other']
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: name === 'amount' ? parseFloat(value) || '' : value
-    });
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!formData.category || !formData.amount) {
+      setError('Please fill in all required fields');
+      return;
+    }
+
     try {
       setIsLoading(true);
-
-      // Form validation
-      if (!formData.amount || !formData.description || !formData.category || !formData.date) {
-        setError('Please fill in all required fields');
-        setIsLoading(false);
-        return;
-      }
+      setError(null);
 
       const transactionData = {
         ...formData,
-        amount: parseFloat(formData.amount)
+        amount: parseFloat(formData.amount) * (formData.type === 'expense' ? -1 : 1)
       };
 
-      if (isEditMode) {
-        await updateTransaction(id, transactionData);
+      if (transaction) {
+        await updateTransaction(transaction.id, transactionData);
       } else {
         await createTransaction(transactionData);
       }
 
-      navigate('/transactions');
+      // Clear form after submission
+      setFormData({
+        type: 'expense',
+        category: '',
+        amount: '',
+        date: new Date().toISOString().split('T')[0],
+        description: ''
+      });
+
+      if (onSubmit) onSubmit();
     } catch (err) {
-      setError('Failed to save transaction');
-      console.error(err);
+      console.error("Error saving transaction:", err);
+      setError("Failed to save transaction. Please try again later.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (isLoading && isEditMode) return <div className="loading">Loading transaction...</div>;
-
   return (
     <div className="transaction-form">
-      <h1>{isEditMode ? 'Edit Transaction' : 'Add New Transaction'}</h1>
-
-      {error && <div className="error">{error}</div>}
-
       <form onSubmit={handleSubmit}>
+        {error && <div className="error-message">{error}</div>}
+
         <div className="form-group">
           <label htmlFor="type">Type</label>
-          <div className="transaction-type-selector">
-            <label className={`type-option ${formData.type === 'expense' ? 'selected' : ''}`}>
-              <input
-                type="radio"
-                name="type"
-                value="expense"
-                checked={formData.type === 'expense'}
-                onChange={handleChange}
-              />
-              Expense
-            </label>
-            <label className={`type-option ${formData.type === 'income' ? 'selected' : ''}`}>
-              <input
-                type="radio"
-                name="type"
-                value="income"
-                checked={formData.type === 'income'}
-                onChange={handleChange}
-              />
-              Income
-            </label>
-          </div>
+          <select
+            id="type"
+            name="type"
+            value={formData.type}
+            onChange={handleChange}
+          >
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+          </select>
         </div>
 
         <div className="form-group">
-          <label htmlFor="amount">Amount ($)</label>
+          <label htmlFor="category">Category</label>
+          <select
+            id="category"
+            name="category"
+            value={formData.category}
+            onChange={handleChange}
+            required
+          >
+            <option value="">Select a category</option>
+            {categories[formData.type].map(category => (
+              <option key={category} value={category}>{category}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="amount">Amount</label>
           <input
             type="number"
             id="amount"
             name="amount"
             value={formData.amount}
             onChange={handleChange}
-            placeholder="0.00"
+            min="0.01"
             step="0.01"
-            min="0"
             required
           />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="description">Description</label>
-          <input
-            type="text"
-            id="description"
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            placeholder="What was this transaction for?"
-            required
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="category">Category</label>
-          <div className="category-input">
-            <select
-              id="category"
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              required
-            >
-              <option value="">Select a category</option>
-              {formData.type === 'expense'
-                ? expenseCategories.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))
-                : incomeCategories.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))
-              }
-              <option value="custom">Add custom category</option>
-            </select>
-
-            {formData.category === 'custom' && (
-              <input
-                type="text"
-                id="customCategory"
-                name="category"
-                value=""
-                onChange={handleChange}
-                placeholder="Enter custom category"
-                required
-              />
-            )}
-          </div>
         </div>
 
         <div className="form-group">
@@ -209,25 +138,39 @@ const TransactionForm = () => {
           />
         </div>
 
+        <div className="form-group">
+          <label htmlFor="description">Description (Optional)</label>
+          <input
+            type="text"
+            id="description"
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+          />
+        </div>
+
         <div className="form-actions">
           <button
-            type="button"
-            onClick={() => navigate('/transactions')}
-            className="btn btn-secondary"
-          >
-            Cancel
-          </button>
-          <button
             type="submit"
-            className="btn btn-primary"
+            className="submit-btn"
             disabled={isLoading}
           >
-            {isLoading ? 'Saving...' : (isEditMode ? 'Update Transaction' : 'Add Transaction')}
+            {isLoading ? 'Saving...' : transaction ? 'Update' : 'Add'}
           </button>
+
+          {onCancel && (
+            <button
+              type="button"
+              className="cancel-btn"
+              onClick={onCancel}
+            >
+              Cancel
+            </button>
+          )}
         </div>
       </form>
     </div>
   );
-};
+}
 
 export default TransactionForm;
