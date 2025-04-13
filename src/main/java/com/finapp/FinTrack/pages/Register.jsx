@@ -141,6 +141,7 @@ function Register() {
       </Paper>
     </Container>
   );
+
 }
 
 export default Register;
