@@ -3,6 +3,9 @@ import {
   Container, Typography, TextField, Button, Box,
   Paper, Alert
 } from '@mui/material';
+
+import { loginUser } from '../Api'; // Adjust path if needed
+
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
 
@@ -17,15 +20,18 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
 
     try {
-      setError('');
-      setLoading(true);
-      await login(username, password);
-      navigate('/dashboard');
-    } catch (error) {
-      setError('Failed to sign in. Check your username and password.');
-      console.error('Login error:', error);
+      const data = await loginUser({ username, password });
+
+      // Assuming your backend returns { token, user }
+      login(data.user, data.token);
+      navigate('/');
+    } catch (err) {
+      console.error('Login error:', err);
+      setError(err?.response?.data?.message || 'Failed to sign in. Check your credentials.');
     } finally {
       setLoading(false);
     }
